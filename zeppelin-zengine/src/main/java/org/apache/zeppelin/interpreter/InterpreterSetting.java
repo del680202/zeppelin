@@ -226,8 +226,8 @@ public class InterpreterSetting {
     }
   }
 
-  void closeAndRemoveInterpreterGroupByNoteId(String noteId) {
-    String processKey = getInterpreterProcessKey("", noteId);
+  void closeAndRemoveInterpreterGroupByNoteId(String user, String noteId) {
+    String processKey = getInterpreterProcessKey(user, noteId);
     List<InterpreterGroup> closeToGroupList = new LinkedList<>();
     InterpreterGroup groupKey;
     for (String intpKey : new HashSet<>(interpreterGroupRef.keySet())) {
@@ -269,7 +269,7 @@ public class InterpreterSetting {
   void closeAndRemoveAllInterpreterGroups() {
     HashSet<String> groupsToRemove = new HashSet<>(interpreterGroupRef.keySet());
     for (String key : groupsToRemove) {
-      closeAndRemoveInterpreterGroupByNoteId(key);
+      closeAndRemoveInterpreterGroupByNoteId("", key);
     }
   }
 

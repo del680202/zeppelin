@@ -148,15 +148,7 @@ public class InterpreterGroup extends ConcurrentHashMap<String, List<Interpreter
       intpToClose.addAll(intpGroupForSession);
     }
     close(intpToClose);
-
-    // make sure remote interpreter process terminates
-    if (remoteInterpreterProcess != null) {
-      while (remoteInterpreterProcess.referenceCount() > 0) {
-        remoteInterpreterProcess.dereference();
-      }
-      remoteInterpreterProcess = null;
-    }
-    allInterpreterGroups.remove(id);
+    terminateRemoteProcess();
   }
 
   /**
@@ -167,14 +159,7 @@ public class InterpreterGroup extends ConcurrentHashMap<String, List<Interpreter
     LOGGER.info("Close interpreter group " + getId() + " for session: " + sessionId);
     List<Interpreter> intpForSession = this.get(sessionId);
     close(intpForSession);
-
-    if (remoteInterpreterProcess != null) {
-      remoteInterpreterProcess.dereference();
-      if (remoteInterpreterProcess.referenceCount() <= 0) {
-        remoteInterpreterProcess = null;
-        allInterpreterGroups.remove(id);
-      }
-    }
+    terminateRemoteProcess();
   }
 
   private void close(Collection<Interpreter> intpToClose) {
@@ -214,7 +199,19 @@ public class InterpreterGroup extends ConcurrentHashMap<String, List<Interpreter
   public void shutdown() {
     LOGGER.info("Close interpreter group " + getId());
 
-    // make sure remote interpreter process terminates
+    terminateRemoteProcess();
+
+    List<Interpreter> intpToClose = new LinkedList<>();
+    for (List<Interpreter> intpGroupForSession : this.values()) {
+      intpToClose.addAll(intpGroupForSession);
+    }
+    close(intpToClose);
+  }
+
+  /**
+   * Make sure remote interpreter process terminates
+   */
+  private void terminateRemoteProcess() {
     if (remoteInterpreterProcess != null) {
       while (remoteInterpreterProcess.referenceCount() > 0) {
         remoteInterpreterProcess.dereference();
@@ -222,12 +219,6 @@ public class InterpreterGroup extends ConcurrentHashMap<String, List<Interpreter
       remoteInterpreterProcess = null;
     }
     allInterpreterGroups.remove(id);
-
-    List<Interpreter> intpToClose = new LinkedList<>();
-    for (List<Interpreter> intpGroupForSession : this.values()) {
-      intpToClose.addAll(intpGroupForSession);
-    }
-    close(intpToClose);
   }
 
   public void setResourcePool(ResourcePool resourcePool) {
